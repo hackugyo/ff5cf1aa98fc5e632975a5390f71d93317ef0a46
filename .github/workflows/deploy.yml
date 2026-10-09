@@ -1,0 +1,56 @@
+name: Build abstract PDFs and publish to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out site source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install PDF splitter
+        run: python -m pip install 'pypdf>=5,<7'
+
+      - name: Generate PDFs for each abstract
+        run: |
+          mkdir -p _site/abstracts
+          if [ -f sources/2026_abstract.pdf ]; then
+            python scripts/build_abstracts.py --source sources/2026_abstract.pdf --output _site/abstracts
+          else
+            python scripts/build_abstracts.py --output _site/abstracts
+          fi
+          cp index.html style.css app.js data.json _site/
+          touch _site/.nojekyll
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload site files
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Publish to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

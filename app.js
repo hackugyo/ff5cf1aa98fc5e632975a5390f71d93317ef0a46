@@ -1,6 +1,5 @@
 'use strict';
 (() => {
-  const ABSTRACT_URL = 'https://www.wakate-forum.org/data/2026/2026_abstract.pdf';
   const ROOMS = {10:['201','301','302','303','304','305','306'],11:['201','301','302','303','304','305','306','406','407','408']};
   const SLOTS = {
     10:[['09:00','09:50'],['10:00','12:50'],['12:50','13:50','昼休み'],['13:50','14:40'],['14:50','15:40','総会（201号室）'],['15:50','16:40'],['16:50','17:40']],
@@ -12,7 +11,9 @@
   const $$=s=>[...document.querySelectorAll(s)];
   const fmt=s=>String(s).normalize('NFKC').toLocaleLowerCase('ja').replace(/[\s\u3000・:：\-—−]/g,'');
   const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const pageUrl=page=>`${ABSTRACT_URL}#page=${page}`;
+  // Every link points to a self-contained PDF starting with this presentation.
+  // The GitHub Actions deployment job generates these assets from the official PDF.
+  const pageUrl=page=>`./abstracts/p${String(page).padStart(3,'0')}.pdf`;
   const LOCAL_STORAGE_KEY='wakate-forum-2026-favorites-v1';
   const loadFavs=()=>{try{return new Set(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)||'[]'));}catch{return new Set();}};
   const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
@@ -28,9 +29,9 @@
     const continuing=slot&&ongoing(e,slot);
     const head=`<div class="event-top"><span class="event-room">${safe(e.room)}号室</span><span class="event-tag">${safe(TYPE_LABEL[e.type])}${e.part?' · 第'+e.part+'部':''}${continuing?' · <span class="card-ongoing">継続中</span>':''}</span></div>`;
     const detail=e.type==='lecture'?
-      `<div class="lecture-talks">${e.talks.map(t=>`<a href="${pageUrl(t.page)}" target="_blank" rel="noopener noreferrer" aria-label="${safe(t.title)}の講演要旨を開く（PDF ${t.page}ページ）"><strong>${safe(t.title)}</strong><span>${safe(t.presenter)}　·　要旨 P.${t.page} ↗</span></a>`).join('')}</div><p class="special-note">※ 講演ごとの個別開始時刻は公式時間割に記載なし</p>`:
+      `<div class="lecture-talks">${e.talks.map(t=>`<a href="${pageUrl(t.page)}" target="_blank" rel="noopener noreferrer" aria-label="${safe(t.title)}の講演要旨を開く（公式PDFの${t.page}ページから）"><strong>${safe(t.title)}</strong><span>${safe(t.presenter)}　·　要旨（原本P.${t.page}）↗</span></a>`).join('')}</div><p class="special-note">※ 講演ごとの個別開始時刻は公式時間割に記載なし</p>`:
       `<h3 class="event-title">${e.unpublished?safe(e.title):`<a href="${pageUrl(e.page)}" target="_blank" rel="noopener noreferrer" aria-label="${safe(e.title)}の要旨を開く（PDF ${e.page}ページ）">${safe(e.title)}</a>`}</h3>`;
-    const extra=e.unpublished?'<span class="special-note">発表者の意向により非公開</span>':e.type==='lecture'?'<span class="abstract-link">講演要旨：上記の2件 ↗</span>':`<a class="abstract-link" href="${pageUrl(e.page)}" target="_blank" rel="noopener noreferrer" aria-label="${safe(e.title)}の要旨PDF、${e.page}ページ">要旨を読む　P.${e.page} ↗</a>`;
+    const extra=e.unpublished?'<span class="special-note">発表者の意向により非公開</span>':e.type==='lecture'?'<span class="abstract-link">講演要旨：上記の2件 ↗</span>':`<a class="abstract-link" href="${pageUrl(e.page)}" target="_blank" rel="noopener noreferrer" aria-label="${safe(e.title)}の要旨PDF、原本${e.page}ページから">要旨を読む　原本P.${e.page} ↗</a>`;
     return `<article class="event-card ${e.type}" data-id="${safe(e.id)}">${head}${detail}<div class="event-speaker">${safe(e.presenter)}</div><div class="event-bottom">${extra}<button type="button" class="star-button" data-star="${safe(e.id)}" aria-pressed="${saved}" aria-label="${saved?'保存を解除':'この発表を保存'}：${safe(e.title)}" title="${saved?'保存を解除':'気になる発表を保存'}">${saved?'★':'☆'}</button></div></article>`;
   }
   function renderAgenda(entries){
