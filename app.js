@@ -18,7 +18,7 @@
   const loadFavs=()=>{try{return new Set(JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)||'[]'));}catch{return new Set();}};
   const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
   const isoDay=()=>today()==='2026-10-11'?11:10;
-  const state={day:isoDay(),view:matchMedia('(min-width: 1000px)').matches?'grid':'agenda',query:'',room:'all',type:'all',onlyFav:false,all:[],favorites:loadFavs()};
+  const state={day:isoDay(),view:matchMedia('(min-width: 1000px)').matches?'grid':'agenda',query:'',room:'all',type:'all',onlyFav:false,compact:false,all:[],favorites:loadFavs()};
   const filtered=()=>state.all.filter(e=>e.day===state.day && (state.room==='all'||e.room===state.room) && (state.type==='all'||e.type===state.type) && (!state.onlyFav||state.favorites.has(e.id)) && (!state.query || fmt([e.title,e.presenter,e.room,e.type,TYPE_LABEL[e.type],...(e.talks||[]).flatMap(t=>[t.title,t.presenter])].join(' ')).includes(fmt(state.query))));
   const order=(a,b)=>+a.room- +b.room||TYPE_ORDER[a.type]-TYPE_ORDER[b.type]||a.title.localeCompare(b.title,'ja');
   function nowInfo(){const localDate=today();const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Tokyo',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date());const d=localDate==='2026-10-10'?10:localDate==='2026-10-11'?11:null;return {day:d,time:parts};}
@@ -48,9 +48,32 @@
   }
   function renderGrid(entries){
     if(!entries.length)return `<div class="empty"><strong>該当する発表がありません。</strong>検索語や絞り込み条件を変更してください。</div>`;
-    const rooms=state.room==='all'?ROOMS[state.day]:[state.room];
-    const width=112+rooms.length*210;
-    let out=`<div class="matrix-scroll" role="region" aria-label="教室別時間割（左右にスクロールできます）" tabindex="0"><table class="matrix" style="min-width:${width}px"><thead><tr><th scope="col">時間</th>${rooms.map(r=>`<th scope="col">${r}号室</th>`).join('')}</tr></thead><tbody>`;
+    // Only render columns with at least one event after *all* filters are applied.
+    // The room selector stays complete, so hidden rooms can still be chosen explicitly.
+    const rooms=(state.room==='all'?ROOMS[state.day]:[state.room])
+      .filter(r=>entries.some(e=>e.room===r));
+    const hidden=ROOMS[state.day].length-rooms.length;
+    const timeWidth=state.compact?92:104;
+    const roomWidth=state.compact?184:232;
+    const width=timeWidth+rooms.length*roomWidth;
+    const roomOptions=rooms.map(r=>`<option value="${r}">${r}号室</option>`).join('');
+    let out=`<section class="grid-shell ${state.compact?'is-compact':''}" aria-label="教室別時間割">
+      <div class="matrix-navigation" aria-label="横方向の移動操作">
+        <div class="matrix-nav-row">
+          <div class="matrix-nav-summary"><strong id="matrix-visible-room" aria-live="off">${rooms[0]}号室から表示</strong>
+            <span>${rooms.length}教室を表示${hidden?'（空の'+hidden+'教室を非表示）':''}</span></div>
+          <div class="matrix-nav-actions">
+            <label class="matrix-compact"><input id="grid-compact" type="checkbox" ${state.compact?'checked':''}> 列を詰める</label>
+            <label class="matrix-jump">教室へ <select id="grid-jump-room" aria-label="ジャンプ先の教室">${roomOptions}</select></label>
+            <button type="button" class="matrix-arrow" data-grid-step="-1" aria-label="左の教室へスクロール" title="左へ移動">←</button>
+            <button type="button" class="matrix-arrow" data-grid-step="1" aria-label="右の教室へスクロール" title="右へ移動">→</button>
+          </div>
+        </div>
+        <div class="matrix-progress"><span>左端</span><input type="range" id="grid-scroll-range" min="0" max="100" value="0" step="1" aria-label="時間割の横スクロール位置"><span>右端</span></div>
+      </div>
+      <div class="matrix-scroll" role="region" aria-label="教室別時間割（横スクロール可能）" tabindex="0">
+      <table class="matrix" style="min-width:${width}px;--time-col:${timeWidth}px"><colgroup><col style="width:${timeWidth}px">${rooms.map(()=>`<col style="width:${roomWidth}px">`).join('')}</colgroup>
+      <thead><tr><th scope="col">時間</th>${rooms.map(r=>`<th scope="col" data-room="${r}">${r}号室</th>`).join('')}</tr></thead><tbody>`;
     for(const slot of SLOTS[state.day]){
       const active=entries.filter(e=>e.start<=slot[0]&&e.end>slot[0]);
       if(!active.length&&(!slot[2]||state.query||state.type!=='all'||state.onlyFav||state.room!=='all'))continue;
@@ -63,10 +86,55 @@
       }
       out+='</tr>';
     }
-    out+='</tbody></table></div>';
-    return out;
+    return out+'</tbody></table></div></section>';
   }
-  function render(){
+
+  function bindGridControls(previousScroll=0){
+    const shell=$('.grid-shell');
+    if(!shell)return;
+    const scroller=shell.querySelector('.matrix-scroll');
+    const slider=shell.querySelector('#grid-scroll-range');
+    const select=shell.querySelector('#grid-jump-room');
+    const summary=shell.querySelector('#matrix-visible-room');
+    const roomHeads=[...scroller.querySelectorAll('thead th[data-room]')];
+    const arrows=[...shell.querySelectorAll('[data-grid-step]')];
+    const maxScroll=()=>Math.max(0,scroller.scrollWidth-scroller.clientWidth);
+    const update=()=>{
+      const max=maxScroll(),left=scroller.scrollLeft;
+      slider.disabled=max<2;
+      slider.value=max>0?String(Math.round(100*left/max)):'0';
+      arrows[0].disabled=max<2||left<2;
+      arrows[1].disabled=max<2||left>=max-2;
+      // The first non-sticky room column at the left of the viewport.
+      const threshold=left+scroller.querySelector('thead th').offsetWidth+12;
+      let active=roomHeads[0];
+      for(const th of roomHeads){if(th.offsetLeft<=threshold)active=th;else break;}
+      if(active){summary.textContent=`${active.dataset.room}号室から表示`;}
+    };
+    scroller.addEventListener('scroll',update,{passive:true});
+    // An explicit range input also provides a draggable horizontal scrollbar
+    // for mice without a horizontal wheel or a trackpad.
+    slider.addEventListener('input',()=>{scroller.scrollLeft=Number(slider.value)*maxScroll()/100;});
+    arrows.forEach(b=>b.addEventListener('click',()=>{
+      const distance=Math.max(184,Math.round((scroller.clientWidth-104)*0.76));
+      scroller.scrollBy({left:Number(b.dataset.gridStep)*distance,behavior:'smooth'});
+    }));
+    select.addEventListener('change',()=>{
+      const th=roomHeads.find(x=>x.dataset.room===select.value);
+      if(th)scroller.scrollTo({left:th.offsetLeft-scroller.querySelector('thead th').offsetWidth,behavior:'smooth'});
+    });
+    shell.querySelector('#grid-compact').addEventListener('change',e=>{state.compact=e.target.checked;render({preserveHorizontal:true});});
+    // For keyboard users, arrows scroll the focused timetable without
+    // interfering with activation of links, favorite controls or text input.
+    scroller.addEventListener('keydown',e=>{
+      if(e.target!==scroller||!['ArrowLeft','ArrowRight'].includes(e.key))return;
+      e.preventDefault();scroller.scrollBy({left:e.key==='ArrowRight'?200:-200,behavior:'smooth'});
+    });
+    scroller.scrollLeft=Math.min(previousScroll,maxScroll());
+    update();
+  }
+  function render({preserveHorizontal=false}={}){
+    const previousScroll=preserveHorizontal?($('.matrix-scroll')?.scrollLeft||0):0;
     $$('.day-tab').forEach(b=>{const is=+b.dataset.day===state.day;b.classList.toggle('active',is);b.setAttribute('aria-pressed',String(is));});
     $$('.view-switch button').forEach(b=>{const is=b.dataset.view===state.view;b.classList.toggle('active',is);b.setAttribute('aria-pressed',String(is));});
     const roomSelect=$('#room-select');const wanted=state.room;
@@ -81,6 +149,7 @@
     $('#clear-filters').hidden=!(state.query||state.room!=='all'||state.type!=='all'||state.onlyFav);
     $('#view-notice').hidden=state.view!=='grid'||!entries.length;
     const elem=$('#schedule-content');elem.className='schedule-content';elem.innerHTML=state.view==='agenda'?renderAgenda(entries):renderGrid(entries);
+    if(state.view==='grid'&&entries.length)bindGridControls(previousScroll);
   }
   function initialize(){
     $$('.day-tab').forEach(b=>b.addEventListener('click',()=>{state.day=+b.dataset.day;state.room='all';render();}));
@@ -90,10 +159,10 @@
     $('#type-select').addEventListener('change',e=>{state.type=e.target.value;render();});
     $('#favorites-only').addEventListener('change',e=>{state.onlyFav=e.target.checked;render();});
     $('#clear-filters').addEventListener('click',()=>{state.query='';state.room='all';state.type='all';state.onlyFav=false;$('#search-input').value='';render();});
-    $('#schedule-content').addEventListener('click',e=>{const btn=e.target.closest('[data-star]');if(!btn)return;const id=btn.dataset.star;if(state.favorites.has(id))state.favorites.delete(id);else state.favorites.add(id);try{localStorage.setItem(LOCAL_STORAGE_KEY,JSON.stringify([...state.favorites]));}catch{}render();});
+    $('#schedule-content').addEventListener('click',e=>{const btn=e.target.closest('[data-star]');if(!btn)return;const id=btn.dataset.star;if(state.favorites.has(id))state.favorites.delete(id);else state.favorites.add(id);try{localStorage.setItem(LOCAL_STORAGE_KEY,JSON.stringify([...state.favorites]));}catch{}render({preserveHorizontal:true});});
     $('#now-button').addEventListener('click',()=>{const n=nowInfo();if(n.day){state.day=n.day;state.query='';state.room='all';state.type='all';state.onlyFav=false;$('#search-input').value='';render();const slots=SLOTS[state.day];const live=slots.find(s=>s[0]<=n.time && n.time<s[1]);const upcoming=slots.find(s=>s[0]>n.time);const target=live||upcoming||slots[slots.length-1];const row=[...$$('[data-time]')].find(e=>e.dataset.time===target[0]);(row||$('#schedule')).scrollIntoView({behavior:'smooth',block:'start'});}else{alert('「現在時刻」は2026年10月10日・11日の日本時間に対応しています。');}});
     document.addEventListener('keydown',e=>{if(e.key==='/'&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)&&!e.ctrlKey&&!e.metaKey){e.preventDefault();$('#search-input').focus();}});
-    setInterval(()=>{if(!state.query)render();},60000);
+    setInterval(()=>{if(!state.query)render({preserveHorizontal:true});},60000);
   }
   async function load(){
     initialize();

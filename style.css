@@ -23,3 +23,51 @@
 .aside-row:last-of-type{border-bottom:0}
 .aside-link{display:inline-block;margin-top:7px}
 }
+
+/* v3: room-column folding and persistent horizontal navigation */
+.grid-shell{position:relative}
+.matrix-navigation{position:sticky;top:0;z-index:7;background:#f5f8f6;border:1px solid var(--line);border-bottom:0;border-radius:10px 10px 0 0;padding:10px 15px 8px;box-shadow:0 3px 12px #153c3c10}
+.matrix-nav-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.matrix-nav-summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:5px 10px;line-height:1.35;min-width:0}
+.matrix-nav-summary strong{color:var(--teal-dark);font-size:13px;white-space:nowrap}
+.matrix-nav-summary span{font-size:11px;color:#607976}
+.matrix-nav-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.matrix-compact{font-size:12px;white-space:nowrap;color:#526a68;display:flex;align-items:center;gap:5px;cursor:pointer}
+.matrix-compact input{width:16px;height:16px;accent-color:var(--teal)}
+.matrix-jump{display:flex;gap:6px;align-items:center;white-space:nowrap;font-size:12px;color:#5d7472}
+.matrix-jump select{padding:7px 7px;background:#fff;border:1px solid #b9cdc6;border-radius:5px;color:var(--ink);min-height:36px}
+.matrix-arrow{width:38px;height:36px;background:#fff;color:#194c4b;border:1px solid #9ebbb3;border-radius:6px;font-size:19px;font-weight:600;line-height:1}
+.matrix-arrow:hover:not(:disabled){background:#dbeae6;border-color:#60968b}
+.matrix-arrow:disabled{opacity:.35;cursor:default}
+.matrix-progress{display:flex;align-items:center;gap:10px;margin-top:6px;font-size:10px;color:#637a76;line-height:1}
+.matrix-progress span{white-space:nowrap}
+.matrix-progress input{flex:1;min-width:0;max-width:100%;height:18px;accent-color:var(--teal);cursor:pointer}
+.matrix-progress input:disabled{opacity:.25;cursor:default}
+.grid-shell .matrix-scroll{border-radius:0 0 10px 10px;overscroll-behavior-x:contain;scrollbar-gutter:stable;scrollbar-width:auto;scrollbar-color:#7ea8a0 #e7eeeb}
+.grid-shell .matrix-scroll::-webkit-scrollbar{height:12px}
+.grid-shell .matrix-scroll::-webkit-scrollbar-thumb{background:#8faea8;border:2px solid #e7eeeb;border-radius:8px}
+.grid-shell .matrix-scroll::-webkit-scrollbar-track{background:#e7eeeb}
+.grid-shell .matrix{min-width:0}
+.grid-shell .matrix th:first-child{width:var(--time-col,104px)}
+.grid-shell .matrix th[data-room]{text-align:center;font-size:13px}
+.grid-shell .matrix td:first-child{width:var(--time-col,104px)}
+.grid-shell.is-compact .matrix td{padding:4px}
+.grid-shell.is-compact .matrix td:first-child{padding:11px 7px}
+.grid-shell.is-compact .matrix td .event-card{padding:8px 7px;margin-bottom:4px}
+.grid-shell.is-compact .matrix .event-title{font-size:11px;line-height:1.45}
+.grid-shell.is-compact .matrix .event-bottom{gap:3px}
+.grid-shell.is-compact .matrix .abstract-link{font-size:10px}
+.grid-shell.is-compact .matrix .event-tag{font-size:10px}
+.grid-shell.is-compact .matrix .time-large{font-size:17px}
+.grid-shell.is-compact .matrix .lecture-talks a{padding:5px}
+.grid-shell.is-compact .matrix .lecture-talks strong{font-size:11px}
+@media(max-width:730px){
+ .matrix-navigation{padding:8px 10px 7px}
+ .matrix-nav-row{align-items:stretch;flex-direction:column;gap:7px}
+ .matrix-nav-summary{justify-content:space-between}
+ .matrix-nav-actions{justify-content:space-between;gap:5px;flex-wrap:nowrap}
+ .matrix-jump select{max-width:100px;padding:6px 3px}
+ .matrix-arrow{width:36px;flex:0 0 36px}
+ .matrix-progress{margin-top:4px}
+}
+@media(max-width:380px){.matrix-compact{font-size:11px}.matrix-jump{font-size:11px}.matrix-arrow{width:32px;flex-basis:32px}}
