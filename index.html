@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#173d40">
+  <meta name="description" content="2026年度 哲学若手研究者フォーラム研究集会の非公式・閲覧用時間割。発表・登壇者の検索、教室別表示、ポスター発表、要旨集PDFへの直接リンクに対応。">
+  <meta property="og:title" content="哲学若手フォーラム2026 | 見やすい時間割">
+  <meta property="og:description" content="10/10・11 学習院大学｜教室・時間で探して、要旨集へワンタップ。">
+  <title>哲学若手フォーラム 2026｜発表時間割・要旨リンク</title>
+  <link rel="stylesheet" href="./style.css">
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#schedule">時間割にスキップ</a>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">Φ</span><span>WAKATE <em>/ 2026</em></span></div>
+      <a class="header-link" href="https://www.wakate-forum.org/" target="_blank" rel="noopener noreferrer">公式サイト <span aria-hidden="true">↗</span></a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="page-title">
+      <div class="wrap hero-inner">
+        <div class="hero-main">
+          <p class="eyebrow">2026年度　哲学若手研究者フォーラム研究集会</p>
+          <h1 id="page-title">哲学の、<br><span>二日間を見渡す。</span></h1>
+          <p class="hero-description">時間・教室・発表題目から探せる、非公式の時間割。気になる研究を見つけたら、公式要旨集の該当ページへ。</p>
+          <div class="hero-details"><span>10.10 <small>土</small> — 10.11 <small>日</small></span><span>学習院大学 目白キャンパス</span></div><a class="hero-jump" href="#schedule">時間割を見る <span aria-hidden="true">↓</span></a>
+        </div>
+        <div class="hero-aside" aria-label="開催情報">
+          <p class="aside-kicker">INFORMATION</p>
+          <div class="aside-row"><span>受付</span><strong>08:30〜</strong></div>
+          <div class="aside-row"><span>受付場所</span><strong>北1号館 3F・308号室</strong></div>
+          <div class="aside-row"><span>参加費</span><strong>無料（事前登録制）</strong></div>
+          <p class="aside-note">1日目の終了後は18:00までに退出。発表の変更・注意事項は公式案内を優先してください。</p>
+          <a href="https://www.wakate-forum.org/data/2026/2026_information.pdf" target="_blank" rel="noopener noreferrer" class="aside-link">総合案内 PDF <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap" id="schedule">
+      <section class="schedule-section" aria-labelledby="schedule-title">
+        <div class="section-heading">
+          <div><p class="section-num">01 / SCHEDULE</p><h2 id="schedule-title">発表時間割</h2></div>
+          <p class="heading-sub">題目をタップすると、公式の要旨集が該当ページで開きます。</p>
+        </div>
+
+        <div class="toolbar" role="group" aria-label="時間割の表示設定">
+          <div class="days" role="group" aria-label="日付切り替え">
+            <button type="button" class="day-tab active" data-day="10" aria-pressed="true"><span class="day-numeral">10.10</span><span>土曜日</span></button>
+            <button type="button" class="day-tab" data-day="11" aria-pressed="false"><span class="day-numeral">10.11</span><span>日曜日</span></button>
+          </div>
+          <div class="display-controls">
+            <div class="view-switch" role="group" aria-label="表示方法">
+              <button type="button" data-view="agenda" aria-pressed="true">時間順</button>
+              <button type="button" data-view="grid" aria-pressed="false">教室別</button>
+            </div>
+            <button type="button" id="now-button" class="now-button" title="現在の時間帯を表示">◉ 現在時刻</button>
+          </div>
+        </div>
+
+        <div class="filter-panel">
+          <label class="search-field" for="search-input">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+            <input id="search-input" type="search" placeholder="題目・発表者・キーワードで検索" autocomplete="off" spellcheck="false">
+            <span class="search-shortcut" aria-hidden="true">/</span>
+          </label>
+          <label class="select-field">教室 <select id="room-select"><option value="all">すべて</option></select></label>
+          <label class="select-field">種別 <select id="type-select"><option value="all">すべて</option><option value="talk">個人・共同研究</option><option value="lecture">テーマレクチャー</option><option value="workshop">ワークショップ</option><option value="poster">ポスター発表</option></select></label>
+          <label class="favorites-only"><input id="favorites-only" type="checkbox"> <span>保存済みのみ</span></label>
+        </div>
+        <div class="status-line"><span id="result-summary" aria-live="polite">時間割を読み込んでいます…</span><button type="button" id="clear-filters" class="reset-button" hidden>絞り込みを解除</button></div>
+        <div class="view-notice" id="view-notice" hidden>教室別表示は横方向にスクロールできます <span aria-hidden="true">→</span></div>
+        <div id="schedule-content" aria-live="off"><noscript>閲覧にはJavaScriptを有効にしてください。<a href="https://www.wakate-forum.org/data/2026/2026_timetable.pdf">公式タイムテーブルPDF</a>はJavaScriptなしでも閲覧できます。</noscript></div>
+      </section>
+
+      <section class="resources" aria-labelledby="resources-title">
+        <div class="section-heading"><div><p class="section-num">02 / ORIGINAL DOCUMENTS</p><h2 id="resources-title">公式資料</h2></div></div>
+        <div class="resource-grid">
+          <a href="https://www.wakate-forum.org/data/2026/2026_abstract.pdf" target="_blank" rel="noopener noreferrer" class="resource-item"><span class="resource-icon">01</span><span class="resource-content"><strong>発表要旨集</strong><small>全発表の原文・135ページ</small></span><span aria-hidden="true">↗</span></a>
+          <a href="https://www.wakate-forum.org/data/2026/2026_shiori.pdf" target="_blank" rel="noopener noreferrer" class="resource-item"><span class="resource-icon">02</span><span class="resource-content"><strong>参加のしおり</strong><small>会場案内・詳細・要旨</small></span><span aria-hidden="true">↗</span></a>
+          <a href="https://www.wakate-forum.org/data/2026/2026_timetable.pdf" target="_blank" rel="noopener noreferrer" class="resource-item"><span class="resource-icon">03</span><span class="resource-content"><strong>タイムテーブル</strong><small>公式の教室別一覧</small></span><span aria-hidden="true">↗</span></a>
+          <a href="https://www.wakate-forum.org/data/2026/2026_poster.pdf" target="_blank" rel="noopener noreferrer" class="resource-item"><span class="resource-icon">04</span><span class="resource-content"><strong>ポスター割り当て</strong><small>第1～3部と各会場</small></span><span aria-hidden="true">↗</span></a>
+          <a href="https://www.wakate-forum.org/data/2026/2026_information.pdf" target="_blank" rel="noopener noreferrer" class="resource-item"><span class="resource-icon">05</span><span class="resource-content"><strong>総合案内</strong><small>受付・アクセス・注意事項</small></span><span aria-hidden="true">↗</span></a>
+        </div>
+        <p class="source-note">このページは参加者による非公式の閲覧補助です。主催者の公式サイトではありません。データは2026年度公開PDFを参照し、要旨本文は転載せず、原本のページにリンクしています。題目・会場・時間などに食い違いがある場合は、主催者からの最新案内を優先してください。PDFビューアによってはページ指定が反映されない場合があります。</p>
+      </section>
+    </div>
+  </main>
+  <footer class="site-footer"><div class="wrap footer-inner"><span class="brand tiny"><span class="brand-mark">Φ</span> WAKATE / 2026</span><span>非公式・参加者向け時間割　/　<a href="https://www.wakate-forum.org/" target="_blank" rel="noopener noreferrer">公式サイト</a></span></div></footer>
+</body>
+</html>
